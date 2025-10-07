@@ -81,13 +81,13 @@ export default function UserProfile() {
           <a href="/" className="hover:underline">
             Home
           </a>
-          <a href="#" className="hover:underline">
+          <a href="/about" className="hover:underline">
             About Us
           </a>
-          <a href="#" className="hover:underline">
+          <a href="/events" className="hover:underline">
             Events
           </a>
-          <a href="#" className="hover:underline">
+          <a href="/contactUs" className="hover:underline">
             Contact Us
           </a>
           <button onClick={logout} className="text-blue-600">
@@ -203,8 +203,37 @@ export default function UserProfile() {
         </div>
       </main>
 
-      <footer className="bg-primary text-white py-4 text-center">
-        UDST@2025
+      <footer className="bg-primary text-white py-6 text-center">
+        <p className="font-semibold tracking-wide mb-3">ACM UDST 2025</p>
+
+        <div className="flex justify-center space-x-6">
+          <a href="https://www.udst.edu.qa/academic/our-colleges/college-computing-and-information-technology">UDST Site</a>
+
+          <a
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-gray-200 transition-colors"
+          >
+            <i className="fab fa-instagram"></i>
+          </a>
+
+          <a
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-gray-200 transition-colors"
+          >
+            <i className="fab fa-linkedin-in"></i>
+          </a>
+
+          <a
+            href="mailto:acmudst@gmail.com"
+            className="hover:text-gray-200 transition-colors"
+          >
+            <i className="fas fa-envelope"></i>
+          </a>
+        </div>
       </footer>
     </div>
   );

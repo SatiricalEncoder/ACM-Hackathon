@@ -179,6 +179,15 @@ export default function HomePage() {
           <a href="#" className="hover:underline">
             Home
           </a>
+          <a href="/about" className="hover:underline">
+            About
+          </a>
+          <a href="/events" className="hover:underline">
+            Events
+          </a>
+          <a href="/contactUs" className="hover:underline">
+            Contact Us
+          </a>
           {user ? (
             <>
               <a href="/userProfile" className="hover:underline">
@@ -198,6 +207,15 @@ export default function HomePage() {
 
       {/* Main content */}
       <main className="flex-1 container mx-auto px-8 py-12">
+
+        <h2 className="text-2xl sm:text-3xl font-semibold text-center mb-6">
+          Welcome to UDST’s ACM Student Chapter
+        </h2>
+
+        <p className="text-center text-gray-600 max-w-3xl mx-auto mb-12">
+The ACM Student Chapter at UDST is a community for students interested in computing, technology, and innovation. We host workshops, talks, and competitions to grow skills and network with peers.
+        </p>
+
         {user && (
           <div className="mb-6 text-center">
             <button
@@ -285,8 +303,37 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-primary text-white py-4 text-center">
-        UDST@2025
+      <footer className="bg-primary text-white py-6 text-center">
+        <p className="font-semibold tracking-wide mb-3">ACM UDST 2025</p>
+
+        <div className="flex justify-center space-x-6">
+          <a href="https://www.udst.edu.qa/academic/our-colleges/college-computing-and-information-technology">UDST Site</a>
+
+          <a
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-gray-200 transition-colors"
+          >
+            <i className="fab fa-instagram"></i>
+          </a>
+
+          <a
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-gray-200 transition-colors"
+          >
+            <i className="fab fa-linkedin-in"></i>
+          </a>
+
+          <a
+            href="mailto:acmudst@gmail.com"
+            className="hover:text-gray-200 transition-colors"
+          >
+            <i className="fas fa-envelope"></i>
+          </a>
+        </div>
       </footer>
     </div>
   );
