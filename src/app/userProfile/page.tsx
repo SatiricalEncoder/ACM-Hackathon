@@ -43,7 +43,11 @@ const HomePage: React.FC = () => {
       <header className="flex items-center justify-between px-8 py-4 border-b shadow-sm">
         <div className="flex items-center space-x-4">
           {/* Logo */}
-          <img src="/images/logo.png" alt="ACM Logo" className="w-16 h-16" />
+          <img
+            src="/images/acm udst logo.svg"
+            alt="ACM UDST Logo"
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full"
+          />
           <h1 className="font-bold text-lg sm:text-xl">
             UDST'S ACM STUDENT CHAPTER
           </h1>
