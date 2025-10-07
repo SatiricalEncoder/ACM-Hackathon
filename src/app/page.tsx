@@ -31,9 +31,12 @@ export default function HomePage() {
           <a href="#" className="hover:underline">
             Contact Us
           </a>
-          <button className="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+          <a
+            href="/login"
+            className="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          >
             Login
-          </button>
+          </a>
         </nav>
       </header>
 
