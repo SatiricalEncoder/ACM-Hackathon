@@ -3,14 +3,16 @@ import { useEffect, useState } from "react";
 import { getCurrentUser, logout } from "@/lib/auth";
 import { supabase } from "@/lib/supabaseClient";
 
-// Example badges (replace with your actual badge data)
+// Example badges (replace image paths with your own)
 const badges = [
-  { id: 1, color: "bg-red-500", tooltip: "First badge" },
-  { id: 2, color: "bg-blue-500", tooltip: "Second badge" },
-  { id: 3, color: "bg-green-500", tooltip: "Third badge" },
+  { id: 1, image: "/images/Login.png", tooltip: "First Login" },
+  { id: 2, image: "/images/width_800.png", tooltip: "Event Participant" },
+  { id: 3, image: "/images/hello.png", tooltip: "Posting x Amount" },
+  { id: 4, image: "/images/lamp.png", tooltip: "ACM Member" },
+  { id: 5, image: "/images/people.png", tooltip: "ACM Member" },
+  { id: 6, image: "/images/person.png", tooltip: "ACM Member" },
 ];
 
-// Simple Card component
 const Card = ({
   title,
   children,
@@ -18,8 +20,8 @@ const Card = ({
   title: string;
   children: React.ReactNode;
 }) => (
-  <div className="bg-white p-6 rounded-lg shadow-lg">
-    <h2 className="text-xl font-bold mb-4">{title}</h2>
+  <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
+    <h2 className="text-xl font-bold mb-4 text-gray-800">{title}</h2>
     {children}
   </div>
 );
@@ -34,7 +36,6 @@ export default function UserProfile() {
       if (!currentUser) return (window.location.href = "/login");
       setUser(currentUser);
 
-      // fetch XP for this user
       const { data: xpData, error } = await supabase
         .from("xp_history")
         .select("xp_change")
@@ -56,16 +57,15 @@ export default function UserProfile() {
     return () => window.removeEventListener("xpUpdated", handler);
   }, []);
 
-  if (!user) return null; // wait for user
+  if (!user) return null;
 
-  // Simple level calculation example: 100 XP per level
   const level = Math.floor(xp / 100) + 1;
   const progress = Math.min(xp % 100, 100);
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans">
       {/* Header */}
-      <header className="flex items-center justify-between px-8 py-4 border-b shadow-sm">
+      <header className="flex items-center justify-between px-8 py-4 border-b shadow-sm bg-white sticky top-0 z-10">
         <div className="flex items-center space-x-4">
           <img
             src="/images/acm udst logo.svg"
@@ -90,26 +90,26 @@ export default function UserProfile() {
           <a href="/contactUs" className="hover:underline">
             Contact Us
           </a>
-          <button onClick={logout} className="text-blue-600">
+          <button onClick={logout} className="text-blue-600 font-semibold">
             Logout
           </button>
         </nav>
       </header>
 
-      {/* Main content */}
-      <main className="flex-1 container mx-auto px-4 sm:px-8 py-8 sm:py-12 bg-gray-50">
+      {/* Main */}
+      <main className="flex-1 container mx-auto px-4 sm:px-8 py-10 bg-gray-50">
         <h1 className="text-3xl font-bold mb-8 text-blue-800">
           Welcome, {user.username}!
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column */}
+          {/* Profile */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Profile Card */}
             <Card title="Profile">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-8">
-                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-500 rounded-lg flex-shrink-0 shadow-inner"></div>
-                <div className="flex flex-col space-y-2 text-gray-700 w-full">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                <div className="w-28 h-28 sm:w-32 sm:h-32 bg-gray-300 rounded-xl shadow-inner"></div>
+
+                <div className="flex flex-col space-y-3 text-gray-700 w-full">
                   <p className="text-lg font-medium">
                     Lvl. {level}
                     <span className="text-sm ml-2 text-gray-500">
@@ -117,19 +117,18 @@ export default function UserProfile() {
                     </span>
                   </p>
 
-                  <div className="w-full bg-gray-300 rounded-full h-2.5">
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
                     <div
-                      className="bg-blue-800 h-2.5 rounded-full shadow-md"
+                      className="bg-blue-700 h-2.5 rounded-full"
                       style={{ width: `${progress}%` }}
-                      title={`${progress}% progress`}
                     ></div>
                   </div>
 
-                  <p className="mt-4">
-                    <span className="font-medium">Total XP:</span> {xp}
+                  <p className="mt-3">
+                    <span className="font-semibold">Total XP:</span> {xp}
                   </p>
                   <p>
-                    <span className="font-medium">Join date:</span>{" "}
+                    <span className="font-semibold">Join date:</span>{" "}
                     {new Date(user.created_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -138,64 +137,50 @@ export default function UserProfile() {
 
             {/* Badges */}
             <Card title="Badges & Achievements">
-              <div className="flex flex-wrap gap-5">
+              <div className="flex flex-wrap gap-6">
                 {badges.map((badge) => (
                   <div
                     key={badge.id}
-                    className={`w-16 h-16 sm:w-20 sm:h-20 ${badge.color} rounded-full flex items-center justify-center text-white shadow-xl hover:scale-105 transition-transform duration-200 cursor-help ring-4 ring-white`}
                     title={badge.tooltip}
+                    className="w-20 h-20 sm:w-24 sm:h-24 bg-white border border-gray-200 rounded-xl shadow-md flex items-center justify-center hover:scale-105 transition-transform"
                   >
-                    <svg
-                      className="w-8 h-8"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM3.636 4.364a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5H4.364a.75.75 0 01-.75-.75zm12.728 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5a.75.75 0 01.75-.75zM10 17a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 17zM4.364 16.364a.75.75 0 01-.75-.75v-1.5a.75.75 0 011.5 0v1.5a.75.75 0 01-.75.75zM16.364 16.364a.75.75 0 01-.75-1.5h1.5a.75.75 0 01.75.75v1.5a.75.75 0 01-.75.75zM10 14a4 4 0 100-8 4 4 0 000 8zm-2.75 0a.75.75 0 01-.75-.75V7.75a.75.75 0 011.5 0v5.5a.75.75 0 01-.75.75zM12.75 14a.75.75 0 01-.75-.75V7.75a.75.75 0 011.5 0v5.5a.75.75 0 01-.75.75z" />
-                    </svg>
+                    <img
+                      src={badge.image}
+                      alt={badge.tooltip}
+                      className="w-16 h-16 object-contain"
+                    />
                   </div>
                 ))}
               </div>
             </Card>
           </div>
 
-          {/* Right Column */}
+          {/* Leaderboard */}
           <div className="lg:col-span-1">
-            <Card title="LEADERBOARD">
+            <Card title="Leaderboard">
               <p className="text-sm text-gray-600 mb-4">
                 Top 5 Members this month:
               </p>
               <ul className="space-y-3">
-                {/* You can replace this with dynamic leaderboard later */}
-                <li className="flex justify-between items-center text-blue-900 font-semibold bg-green-100 p-3 rounded-lg border-l-4 border-green-500 shadow-sm">
-                  <span className="flex items-center">
-                    <span className="text-lg mr-2">🥇</span> Alice
-                  </span>
-                  <span className="text-sm">1200 Pts</span>
+                <li className="flex justify-between items-center bg-green-100 p-3 rounded-lg border-l-4 border-green-500 shadow-sm">
+                  <span>🥇 Alice</span>
+                  <span className="text-sm">1200 XP</span>
                 </li>
                 <li className="flex justify-between items-center bg-blue-100 p-3 rounded-lg border-l-4 border-blue-500 shadow-sm">
-                  <span className="flex items-center">
-                    <span className="text-lg mr-2">🥈</span> Bob
-                  </span>
-                  <span className="text-sm">950 Pts</span>
+                  <span>🥈 Bob</span>
+                  <span className="text-sm">950 XP</span>
                 </li>
                 <li className="flex justify-between items-center bg-indigo-100 p-3 rounded-lg border-l-4 border-indigo-500 shadow-sm">
-                  <span className="flex items-center">
-                    <span className="text-lg mr-2">🥉</span> Charlie
-                  </span>
-                  <span className="text-sm">820 Pts</span>
+                  <span>🥉 Charlie</span>
+                  <span className="text-sm">820 XP</span>
                 </li>
                 <li className="flex justify-between items-center p-3 rounded-lg hover:bg-gray-100 transition">
-                  <span className="flex items-center">
-                    <span className="text-lg mr-2">4.</span> Dana
-                  </span>
-                  <span className="text-sm">710 Pts</span>
+                  <span>4. Dana</span>
+                  <span className="text-sm">710 XP</span>
                 </li>
                 <li className="flex justify-between items-center p-3 rounded-lg hover:bg-gray-100 transition">
-                  <span className="flex items-center">
-                    <span className="text-lg mr-2">5.</span> Eve
-                  </span>
-                  <span className="text-sm">650 Pts</span>
+                  <span>5. Eve</span>
+                  <span className="text-sm">650 XP</span>
                 </li>
               </ul>
             </Card>
