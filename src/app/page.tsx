@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getCurrentUser, logout } from "@/lib/fakeAuth";
+import { getCurrentUser, logout } from "@/lib/auth";
 
 export default function HomePage() {
   const [user, setUser] = useState<any>(null);
