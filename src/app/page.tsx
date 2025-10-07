@@ -1,6 +1,17 @@
 "use client";
+import { useEffect, useState } from "react";
+import { getCurrentUser, logout } from "@/lib/fakeAuth";
 
 export default function HomePage() {
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser); // null if not logged in
+    };
+    fetchUser();
+  }, []);
   return (
     <div className="flex flex-col min-h-screen bg-white text-black font-sans">
       {/* Header */}
@@ -31,12 +42,20 @@ export default function HomePage() {
           <a href="#" className="hover:underline">
             Contact Us
           </a>
-          <a
-            href="/login"
-            className="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-          >
-            Login
-          </a>
+          {user ? (
+            <>
+              <a href="/userProfile" className="hover:underline">
+                Profile
+              </a>
+              <button onClick={logout} className="text-blue-600">
+                Logout
+              </button>
+            </>
+          ) : (
+            <a href="/login" className="hover:underline">
+              Login
+            </a>
+          )}
         </nav>
       </header>
 

@@ -1,59 +1,48 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getUser, logout } from "@/lib/fakeAuth";
+import { getCurrentUser, logout } from "@/lib/auth";
 
-type Badge = {
-  id: number;
-  color: string;
-  tooltip: string;
-};
+// Example badges (replace with your actual badge data)
+const badges = [
+  { id: 1, color: "bg-red-500", tooltip: "First badge" },
+  { id: 2, color: "bg-blue-500", tooltip: "Second badge" },
+  { id: 3, color: "bg-green-500", tooltip: "Third badge" },
+];
 
-function Card({
+// Simple Card component
+const Card = ({
   title,
   children,
 }: {
   title: string;
   children: React.ReactNode;
-}) {
-  return (
-    <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-200">
-      <h2 className="text-xl font-semibold text-blue-900 mb-4">{title}</h2>
-      {children}
-    </div>
-  );
-}
+}) => (
+  <div className="bg-white p-6 rounded-lg shadow-lg">
+    <h2 className="text-xl font-bold mb-4">{title}</h2>
+    {children}
+  </div>
+);
 
 export default function UserProfile() {
-  const [username, setUsername] = useState("");
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const user = getUser();
-    if (!user) window.location.href = "/login";
-    else setUsername(user);
+    const fetchUser = async () => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) window.location.href = "/login";
+      else setUser(currentUser);
+    };
+    fetchUser();
   }, []);
 
-  if (!username) return null;
-
-  // 🧍 Mock user data
-  const user = {
-    username,
-    level: 5,
-    progress: 72,
-    joinDate: "2024-03-15",
-    rank: 12,
-  };
-
-  const badges: Badge[] = [
-    { id: 1, color: "bg-yellow-500", tooltip: "Onboarding Badge" },
-    { id: 2, color: "bg-blue-500", tooltip: "Workshop Attendee" },
-    { id: 3, color: "bg-green-600", tooltip: "Top 10 Rank" },
-  ];
+  if (!user) return null; // wait for user
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans">
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-4 border-b shadow-sm">
         <div className="flex items-center space-x-4">
+          {/* Logo */}
           <img
             src="/images/acm udst logo.svg"
             alt="ACM UDST Logo"
@@ -64,17 +53,18 @@ export default function UserProfile() {
           </h1>
         </div>
 
+        {/* Navigation */}
         <nav className="flex items-center space-x-6">
           <a href="/" className="hover:underline">
             Home
           </a>
-          <a href="/about" className="hover:underline">
+          <a href="#" className="hover:underline">
             About Us
           </a>
-          <a href="/events" className="hover:underline">
+          <a href="#" className="hover:underline">
             Events
           </a>
-          <a href="/contact" className="hover:underline">
+          <a href="#" className="hover:underline">
             Contact Us
           </a>
           <button onClick={logout} className="text-blue-600">
@@ -83,45 +73,47 @@ export default function UserProfile() {
         </nav>
       </header>
 
-      {/* Main */}
+      {/* Main content */}
       <main className="flex-1 container mx-auto px-4 sm:px-8 py-8 sm:py-12 bg-gray-50">
         <h1 className="text-3xl font-bold mb-8 text-blue-800">
           Welcome, {user.username}!
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left: Profile + Badges */}
+          {/* Left Column */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Profile Card */}
             <Card title="Profile">
               <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-8">
                 <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-500 rounded-lg flex-shrink-0 shadow-inner"></div>
-
                 <div className="flex flex-col space-y-2 text-gray-700 w-full">
                   <p className="text-lg font-medium">
-                    Lvl. {user.level}
+                    Lvl. {user.level || 1}
                     <span className="text-sm ml-2 text-gray-500">
-                      ({user.progress}% to next)
+                      ({user.progress || 0}% to next)
                     </span>
                   </p>
 
                   <div className="w-full bg-gray-300 rounded-full h-2.5">
                     <div
                       className="bg-blue-800 h-2.5 rounded-full shadow-md"
-                      style={{ width: `${user.progress}%` }}
+                      style={{ width: `${user.progress || 0}%` }}
+                      title={`${user.progress || 0}% progress`}
                     ></div>
                   </div>
 
                   <p className="mt-4">
                     <span className="font-medium">Join date:</span>{" "}
-                    {user.joinDate}
+                    {new Date(user.created_at).toLocaleDateString()}
                   </p>
                   <p>
-                    <span className="font-medium">Rank:</span> #{user.rank}
+                    <span className="font-medium">Rank:</span> #{user.rank_id}
                   </p>
                 </div>
               </div>
             </Card>
 
+            {/* Badges */}
             <Card title="Badges & Achievements">
               <div className="flex flex-wrap gap-5">
                 {badges.map((badge) => (
@@ -130,14 +122,21 @@ export default function UserProfile() {
                     className={`w-16 h-16 sm:w-20 sm:h-20 ${badge.color} rounded-full flex items-center justify-center text-white shadow-xl hover:scale-105 transition-transform duration-200 cursor-help ring-4 ring-white`}
                     title={badge.tooltip}
                   >
-                    🏅
+                    <svg
+                      className="w-8 h-8"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM3.636 4.364a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5H4.364a.75.75 0 01-.75-.75zm12.728 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5a.75.75 0 01.75-.75zM10 17a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 17zM4.364 16.364a.75.75 0 01-.75-.75v-1.5a.75.75 0 011.5 0v1.5a.75.75 0 01-.75.75zM16.364 16.364a.75.75 0 01-.75-1.5h1.5a.75.75 0 01.75.75v1.5a.75.75 0 01-.75.75zM10 14a4 4 0 100-8 4 4 0 000 8zm-2.75 0a.75.75 0 01-.75-.75V7.75a.75.75 0 011.5 0v5.5a.75.75 0 01-.75.75zM12.75 14a.75.75 0 01-.75-.75V7.75a.75.75 0 011.5 0v5.5a.75.75 0 01-.75.75z" />
+                    </svg>
                   </div>
                 ))}
               </div>
             </Card>
           </div>
 
-          {/* Right: Leaderboard */}
+          {/* Right Column */}
           <div className="lg:col-span-1">
             <Card title="LEADERBOARD">
               <p className="text-sm text-gray-600 mb-4">
@@ -145,24 +144,34 @@ export default function UserProfile() {
               </p>
               <ul className="space-y-3">
                 <li className="flex justify-between items-center text-blue-900 font-semibold bg-green-100 p-3 rounded-lg border-l-4 border-green-500 shadow-sm">
-                  <span>🥇 Alice</span>
-                  <span>1200 Pts</span>
+                  <span className="flex items-center">
+                    <span className="text-lg mr-2">🥇</span> Alice
+                  </span>
+                  <span className="text-sm">1200 Pts</span>
                 </li>
                 <li className="flex justify-between items-center bg-blue-100 p-3 rounded-lg border-l-4 border-blue-500 shadow-sm">
-                  <span>🥈 Bob</span>
-                  <span>950 Pts</span>
+                  <span className="flex items-center">
+                    <span className="text-lg mr-2">🥈</span> Bob
+                  </span>
+                  <span className="text-sm">950 Pts</span>
                 </li>
                 <li className="flex justify-between items-center bg-indigo-100 p-3 rounded-lg border-l-4 border-indigo-500 shadow-sm">
-                  <span>🥉 Charlie</span>
-                  <span>820 Pts</span>
+                  <span className="flex items-center">
+                    <span className="text-lg mr-2">🥉</span> Charlie
+                  </span>
+                  <span className="text-sm">820 Pts</span>
                 </li>
                 <li className="flex justify-between items-center p-3 rounded-lg hover:bg-gray-100 transition">
-                  <span>4. Dana</span>
-                  <span>710 Pts</span>
+                  <span className="flex items-center">
+                    <span className="text-lg mr-2">4.</span> Dana
+                  </span>
+                  <span className="text-sm">710 Pts</span>
                 </li>
                 <li className="flex justify-between items-center p-3 rounded-lg hover:bg-gray-100 transition">
-                  <span>5. Eve</span>
-                  <span>650 Pts</span>
+                  <span className="flex items-center">
+                    <span className="text-lg mr-2">5.</span> Eve
+                  </span>
+                  <span className="text-sm">650 Pts</span>
                 </li>
               </ul>
             </Card>
@@ -171,8 +180,8 @@ export default function UserProfile() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-blue-900 text-white py-4 text-center">
-        UDST © 2025
+      <footer className="bg-primary text-white py-4 text-center">
+        UDST@2025
       </footer>
     </div>
   );
