@@ -14,34 +14,32 @@ export default function HomePage() {
   const fetchEvents = async () => {
     if (!user) return;
 
-    const { data: eventsData, error } = await supabase
+    const { data, error } = await supabase
       .from("event")
       .select(
         `
         *,
-        event_participants (
-          user_id
-        )
+        event_participants(user_id)
       `,
       )
+      .eq("is_deleted", false) // ✅ show only active events
       .order("event_date", { ascending: true });
 
     if (error) {
-      console.error("Error fetching events:", error);
+      console.error("Error fetching events:", error.message);
       return;
     }
 
-    const mapped = (eventsData || []).map((ev: any) => ({
+    const mapped = (data || []).map((ev: any) => ({
       ...ev,
       joined: ev.event_participants?.some(
         (p: any) => p.user_id === user.user_id,
       ),
     }));
-
     setEvents(mapped);
   };
 
-  // Fetch current user
+  // ✅ Fetch current user
   useEffect(() => {
     const fetchUser = async () => {
       const u = await getCurrentUser();
@@ -50,14 +48,14 @@ export default function HomePage() {
     fetchUser();
   }, []);
 
-  // Fetch events once user is set
+  // ✅ Fetch events whenever user changes
   useEffect(() => {
-    if (user) fetchEvents();
+    fetchEvents();
   }, [user]);
 
-  // Join event
+  // ✅ Join event
   const handleJoin = async (event_id: number) => {
-    if (!user) return alert("Login to join events.");
+    if (!user) return alert("Login required");
 
     const { data: existing } = await supabase
       .from("event_participants")
@@ -76,9 +74,9 @@ export default function HomePage() {
       },
     ]);
 
-    if (error) return alert("Error joining event: " + error.message);
+    if (error) return alert("Error joining: " + error.message);
 
-    // Give XP
+    // Add XP
     await supabase.from("xp_history").insert([
       {
         user_id: user.user_id,
@@ -88,10 +86,11 @@ export default function HomePage() {
       },
     ]);
 
+    window.dispatchEvent(new Event("xpUpdated"));
     fetchEvents();
   };
 
-  // Leave event
+  // ✅ Leave event
   const handleLeave = async (event_id: number) => {
     if (!user) return;
 
@@ -101,28 +100,37 @@ export default function HomePage() {
       .eq("event_id", event_id)
       .eq("user_id", user.user_id);
 
-    if (error) return alert("Error leaving event: " + error.message);
+    if (error) return alert("Error leaving: " + error.message);
 
+    await supabase.from("xp_history").insert([
+      {
+        user_id: user.user_id,
+        xp_change: -50,
+        reason: `Left event ${event_id}`,
+        time_give: new Date().toISOString(),
+      },
+    ]);
+
+    window.dispatchEvent(new Event("xpUpdated"));
     fetchEvents();
   };
 
-  // Create new event
+  // ✅ Create event
   const handleCreateEvent = async () => {
-    if (!newTitle) return alert("Event title required");
+    if (!newTitle) return alert("Title required");
+    if (!user) return alert("Login required");
 
-    if (!user) return alert("Login required to create event");
-
-    const { data, error } = await supabase.from("event").insert([
+    const { error } = await supabase.from("event").insert([
       {
         title: newTitle,
         event_date: newDate ? new Date(newDate).toISOString() : null,
         created_by: user.email,
+        creator_id: user.user_id,
       },
     ]);
 
     if (error) return alert("Error creating event: " + error.message);
 
-    // Give XP
     await supabase.from("xp_history").insert([
       {
         user_id: user.user_id,
@@ -132,10 +140,26 @@ export default function HomePage() {
       },
     ]);
 
+    window.dispatchEvent(new Event("xpUpdated"));
     setNewTitle("");
     setNewDate("");
     setShowForm(false);
     fetchEvents();
+  };
+
+  const handleDeleteEvent = async (event_id: number) => {
+    // Instantly hide it
+    setEvents((prev) => prev.filter((ev) => ev.event_id !== event_id));
+
+    // Optionally update Supabase if time allows
+    try {
+      await supabase
+        .from("event")
+        .update({ is_deleted: true })
+        .eq("event_id", event_id);
+    } catch (e) {
+      console.warn("Skip Supabase delete for now:", e);
+    }
   };
 
   return (
@@ -145,26 +169,15 @@ export default function HomePage() {
         <div className="flex items-center space-x-4">
           <img
             src="/images/acm udst logo.svg"
-            alt="ACM UDST Logo"
             className="w-16 h-16 sm:w-20 sm:h-20 rounded-full"
           />
           <h1 className="font-bold text-lg sm:text-xl">
             UDST'S ACM STUDENT CHAPTER
           </h1>
         </div>
-
         <nav className="flex items-center space-x-6">
           <a href="#" className="hover:underline">
             Home
-          </a>
-          <a href="#" className="hover:underline">
-            About Us
-          </a>
-          <a href="#" className="hover:underline">
-            Events
-          </a>
-          <a href="#" className="hover:underline">
-            Contact Us
           </a>
           {user ? (
             <>
@@ -185,18 +198,6 @@ export default function HomePage() {
 
       {/* Main content */}
       <main className="flex-1 container mx-auto px-8 py-12">
-        <h2 className="text-2xl sm:text-3xl font-semibold text-center mb-6">
-          Welcome to UDST’s Student Chapter
-        </h2>
-
-        <p className="text-center text-gray-600 max-w-3xl mx-auto mb-12">
-          Lorem ipsum dolor sit amet consectetur adipiscing elit. Consectetur
-          adipiscing elit quisque faucibus ex sapien vitae. Ex sapien vitae
-          pellentesque sem placerat in id. Placerat in id cursus mi pretium
-          tellus duis. Pretium tellus duis convallis tempus leo eu aenean.
-        </p>
-
-        {/* Create Event Button */}
         {user && (
           <div className="mb-6 text-center">
             <button
@@ -208,7 +209,6 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Event Creation Form */}
         {showForm && (
           <div className="mb-6 max-w-md mx-auto p-4 bg-gray-100 rounded">
             <input
@@ -252,26 +252,32 @@ export default function HomePage() {
                   </p>
                 </div>
 
-                {user && (
-                  <div className="flex space-x-2">
-                    {!ev.joined && (
-                      <button
-                        onClick={() => handleJoin(ev.event_id)}
-                        className="bg-green-500 text-white px-2 py-1 rounded"
-                      >
-                        Join
-                      </button>
-                    )}
-                    {ev.joined && (
-                      <button
-                        onClick={() => handleLeave(ev.event_id)}
-                        className="bg-red-500 text-white px-2 py-1 rounded"
-                      >
-                        Leave
-                      </button>
-                    )}
-                  </div>
-                )}
+                <div className="flex space-x-2">
+                  {user && !ev.joined && (
+                    <button
+                      onClick={() => handleJoin(ev.event_id)}
+                      className="bg-green-500 text-white px-2 py-1 rounded"
+                    >
+                      Join
+                    </button>
+                  )}
+                  {user && ev.joined && (
+                    <button
+                      onClick={() => handleLeave(ev.event_id)}
+                      className="bg-red-500 text-white px-2 py-1 rounded"
+                    >
+                      Leave
+                    </button>
+                  )}
+                  {user && ev.creator_id === user.user_id && (
+                    <button
+                      onClick={() => handleDeleteEvent(ev.event_id)}
+                      className="bg-red-700 text-white px-2 py-1 rounded"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getCurrentUser, logout } from "@/lib/auth";
+import { supabase } from "@/lib/supabaseClient";
 
 // Example badges (replace with your actual badge data)
 const badges = [
@@ -25,24 +26,47 @@ const Card = ({
 
 export default function UserProfile() {
   const [user, setUser] = useState<any>(null);
+  const [xp, setXp] = useState<number>(0);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchUserAndXp = async () => {
       const currentUser = await getCurrentUser();
-      if (!currentUser) window.location.href = "/login";
-      else setUser(currentUser);
+      if (!currentUser) return (window.location.href = "/login");
+      setUser(currentUser);
+
+      // fetch XP for this user
+      const { data: xpData, error } = await supabase
+        .from("xp_history")
+        .select("xp_change")
+        .eq("user_id", currentUser.user_id);
+
+      if (!error && xpData) {
+        const totalXp = xpData.reduce(
+          (sum: number, item: any) => sum + item.xp_change,
+          0,
+        );
+        setXp(totalXp);
+      }
     };
-    fetchUser();
+
+    fetchUserAndXp();
+
+    const handler = () => fetchUserAndXp();
+    window.addEventListener("xpUpdated", handler);
+    return () => window.removeEventListener("xpUpdated", handler);
   }, []);
 
   if (!user) return null; // wait for user
+
+  // Simple level calculation example: 100 XP per level
+  const level = Math.floor(xp / 100) + 1;
+  const progress = Math.min(xp % 100, 100);
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans">
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-4 border-b shadow-sm">
         <div className="flex items-center space-x-4">
-          {/* Logo */}
           <img
             src="/images/acm udst logo.svg"
             alt="ACM UDST Logo"
@@ -53,7 +77,6 @@ export default function UserProfile() {
           </h1>
         </div>
 
-        {/* Navigation */}
         <nav className="flex items-center space-x-6">
           <a href="/" className="hover:underline">
             Home
@@ -88,26 +111,26 @@ export default function UserProfile() {
                 <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-500 rounded-lg flex-shrink-0 shadow-inner"></div>
                 <div className="flex flex-col space-y-2 text-gray-700 w-full">
                   <p className="text-lg font-medium">
-                    Lvl. {user.level || 1}
+                    Lvl. {level}
                     <span className="text-sm ml-2 text-gray-500">
-                      ({user.progress || 0}% to next)
+                      ({progress}% to next)
                     </span>
                   </p>
 
                   <div className="w-full bg-gray-300 rounded-full h-2.5">
                     <div
                       className="bg-blue-800 h-2.5 rounded-full shadow-md"
-                      style={{ width: `${user.progress || 0}%` }}
-                      title={`${user.progress || 0}% progress`}
+                      style={{ width: `${progress}%` }}
+                      title={`${progress}% progress`}
                     ></div>
                   </div>
 
                   <p className="mt-4">
-                    <span className="font-medium">Join date:</span>{" "}
-                    {new Date(user.created_at).toLocaleDateString()}
+                    <span className="font-medium">Total XP:</span> {xp}
                   </p>
                   <p>
-                    <span className="font-medium">Rank:</span> #{user.rank_id}
+                    <span className="font-medium">Join date:</span>{" "}
+                    {new Date(user.created_at).toLocaleDateString()}
                   </p>
                 </div>
               </div>
@@ -143,6 +166,7 @@ export default function UserProfile() {
                 Top 5 Members this month:
               </p>
               <ul className="space-y-3">
+                {/* You can replace this with dynamic leaderboard later */}
                 <li className="flex justify-between items-center text-blue-900 font-semibold bg-green-100 p-3 rounded-lg border-l-4 border-green-500 shadow-sm">
                   <span className="flex items-center">
                     <span className="text-lg mr-2">🥇</span> Alice
@@ -179,7 +203,6 @@ export default function UserProfile() {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="bg-primary text-white py-4 text-center">
         UDST@2025
       </footer>
